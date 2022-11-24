@@ -1,0 +1,14 @@
+#button{
+-fx-font: 14px "Arial";
+-fx-padding: 2;
+-fx-background-color: black;
+-fx-text-fill: green;
+}
+
+button:hover{
+-fx-font: 14px "serif";
+-fx-padding: 2;
+-fx-background-color: red;
+-fx-text-fill: black;
+
+}
