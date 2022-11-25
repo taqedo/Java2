@@ -1,4 +1,4 @@
-package lesson4.homework;
+package lesson6.Client;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,7 +36,12 @@ public class Chat extends JFrame {
         nickPanel.add(nickScroll);
         nickArea.setBackground(Color.black);
         nickArea.setForeground(Color.pink);
+
+//        нужно передавать в ник панель инфу с сервера
+
         nickArea.append(nickname);
+
+
         JTextArea logArea = new JTextArea();
         logArea.setEditable(false);
         JScrollPane logAScroll = new JScrollPane(logArea);
@@ -99,25 +104,6 @@ public class Chat extends JFrame {
                     }
                 }
             });
-
-//            addWindowListener(new WindowAdapter() {
-//                @Override
-//                public void windowClosing(WindowEvent e) {
-//                    super.windowClosing(e);
-//                    try {
-//
-//                    }
-//                }
-//            });
-
-
-
-
-
-
-
-
-
 
         setVisible(true);
     }
