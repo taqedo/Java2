@@ -100,22 +100,6 @@ public class Chat extends JFrame {
                 }
             });
 
-//            addWindowListener(new WindowAdapter() {
-//                @Override
-//                public void windowClosing(WindowEvent e) {
-//                    super.windowClosing(e);
-//                    try {
-//
-//                    }
-//                }
-//            });
-
-
-
-
-
-
-
 
 
 
