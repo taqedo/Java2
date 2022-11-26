@@ -3,16 +3,14 @@ package lesson6.HW;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
-    Scanner scanner = new Scanner(System.in);
     private final String ADRR = "localhost";
     private final int PORT = 9393;
-    private Socket socket;
-    private DataInputStream in;
-    private DataOutputStream out;
+    private Socket socket = null;
 
     public Client() {
         connect();
@@ -21,52 +19,54 @@ public class Client {
     public void connect() {
         try {
             socket = new Socket(ADRR, PORT);
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
+            final Scanner in = new Scanner(socket.getInputStream());
+            final PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            final Scanner console = new Scanner(System.in);
 
-            new Thread(() -> {
-                while (true){
-                    try {
-                        String inStr = in.readUTF();
-                        if (inStr.equalsIgnoreCase("/end")){
-                            break;
-                        }
-                        System.out.println(inStr);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            Thread t1 = new Thread(() -> {
+                while (true) {
+                    String inStr = in.nextLine();
+                    if (inStr.equalsIgnoreCase("/end")) {
+                        System.out.println("Server: " + inStr);
+                        System.out.println("t1 is dead");
+                        out.println("/end");
+                        break;
                     }
-                }try {
-                    out.writeUTF("/end");
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Server: " + inStr);
                 }
 
-            }).start();
+            });
+            t1.start();
 
-            new Thread(() -> {
-                while (true){
-                    try {
-                        String outStr = scanner.nextLine();
-                        out.writeUTF("client: " + outStr);
-                        if (outStr.equalsIgnoreCase("/end") ){
-                            break;
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            Thread t2 = new Thread(() -> {
+                while (true) {
+                    String outStr = console.nextLine();
+                    out.println(outStr);
+                    if (outStr.equalsIgnoreCase("/end") || !t1.isAlive()) {
+                        System.out.println("t2 is dead");
+                        break;
                     }
                 }
-                try {
-                    out.writeUTF("/end");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+            });
+            t2.start();
+
+            try {
+                t1.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
 
         } catch (IOException e) {
             e.printStackTrace();
+        }finally {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
-
     public static void main(String[] args) {
         new Client();
     }
