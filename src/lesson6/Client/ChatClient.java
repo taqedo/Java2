@@ -1,7 +1,5 @@
 package lesson6.Client;
 
-import javafx.fxml.Initializable;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -9,13 +7,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.URL;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ResourceBundle;
 
-public class ChatClient extends JFrame
-        implements Initializable {
+public class ChatClient extends JFrame {
 
     private final String SERVER_ADDR = "localhost";
     private final int SERVER_PORT = 9323;
@@ -25,64 +20,78 @@ public class ChatClient extends JFrame
     private JTextArea nickArea;
     DataInputStream in1;
     DataOutputStream out1;
-    String nick;
 
-    public ChatClient(String nick) {
-        this.nick = nick;
+    private JTextArea welcome;
+    private JTextField loginFld;
+    private JTextField passwordFld;
+    private boolean isValid = true;
+    String nickname;
+    String login;
+    String password;
 
-        initialize(null, null);
-
-        chat(nick);
+    public ChatClient() {
+        nickname();
     }
+    public void nickname() {
+
+        setTitle("Nickname");
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setBounds(700, 450, 400, 200);
+        setResizable(false);
+
+        JPanel welcomePane = new JPanel();
+        add(welcomePane, BorderLayout.NORTH);
+        welcomePane.setBackground(Color.gray);
+        welcome = new JTextArea("\n" + "Добро пожаловать в mIRC 2022!" + "\n" + "\n" + "Введите ваш логин и пароль");
+        welcome.setBackground(Color.gray);
+        welcome.setEditable(false);
+        welcomePane.add(welcome, BorderLayout.CENTER);
+
+        JPanel loginPane = new JPanel();
+        add(loginPane, BorderLayout.CENTER);
+        loginPane.setBackground(Color.gray);
+
+        loginFld = new JFormattedTextField();
+        loginFld.setPreferredSize(new Dimension(100, 25));
+        loginPane.add(loginFld, BorderLayout.WEST);
+
+        passwordFld = new JFormattedTextField();
+        passwordFld.setPreferredSize(new Dimension(100, 25));
+        loginPane.add(passwordFld, BorderLayout.CENTER);
+
+        JButton lestGo = new JButton("Accept");
+        loginPane.add(lestGo, BorderLayout.AFTER_LAST_LINE);
+
+        setVisible(true);
+
+        lestGo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!loginFld.getText().trim().isEmpty() && !passwordFld.getText().trim().isEmpty()) {
+                    login = loginFld.getText();
+                    password = passwordFld.getText();
+                    tryToAuth();
 
 
-//    public void openConnection() throws IOException {
-//        socket1 = new Socket(SERVER_ADDR, SERVER_PORT);
-//        in1 = new DataInputStream(socket1.getInputStream());
-//        out1 = new DataOutputStream(socket1.getOutputStream());
-//        new Thread(() -> {
-//            try {
-//                while(true){
-//                    String strFromServer = in1.readUTF();
-//                    if (strFromServer.equalsIgnoreCase("/end")){
-//                        break;
-//                    }
-//                    logArea.append(strFromServer);
-//
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }).start();
-//    }
-
-    public void closeConnection() {
-        try {
-            in1.close();
-            out1.close();
-            socket1.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void sendMsg() {
-        if (!msgFld.getText().trim().isEmpty()) {
-            String timeColonPattern = "HH:mm:ss";
-            DateTimeFormatter timeColonFormatter = DateTimeFormatter.ofPattern(timeColonPattern);
-            String time = timeColonFormatter.format(LocalTime.now());
-            try {
-                out1.writeUTF(time + " " + nick + ": " + msgFld.getText() + "\n");
-                msgFld.setText(null);
-                msgFld.grabFocus();
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Sending msg error!");
+                }
             }
-        }
-    }
 
+        });
+
+        new Thread(() -> {
+            while(isValid){
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            loginPane.setVisible(false);
+            welcomePane.setVisible(false);
+
+
+        }).start();
+    }
     public void chat(String nickname) {
         setTitle("IRC 2022");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -104,7 +113,7 @@ public class ChatClient extends JFrame
         botPanel.setLayout(new FlowLayout());
         nickPanel.setLayout(new BorderLayout());
 
-        JTextArea nickArea = new JTextArea();
+        nickArea = new JTextArea();
         nickArea.setEditable(false);
         JScrollPane nickScroll = new JScrollPane(nickArea);
         nickPanel.add(nickScroll);
@@ -112,9 +121,6 @@ public class ChatClient extends JFrame
         nickArea.setForeground(Color.pink);
 
 //        tut:
-        nickArea.append(nickname);
-
-
         logArea = new JTextArea();
         logArea.setEditable(false);
         JScrollPane logAScroll = new JScrollPane(logArea);
@@ -175,23 +181,64 @@ public class ChatClient extends JFrame
 
         setVisible(true);
     }
-
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void sendMsg() {
+        if (!msgFld.getText().trim().isEmpty()) {
+            String timeColonPattern = "HH:mm:ss";
+            DateTimeFormatter timeColonFormatter = DateTimeFormatter.ofPattern(timeColonPattern);
+            String time = timeColonFormatter.format(LocalTime.now());
+            try {
+                out1.writeUTF(time + " " + nickname + ": " + msgFld.getText() + "\n");
+                msgFld.setText(null);
+                msgFld.grabFocus();
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Sending msg error!");
+            }
+        }
+    }
+    public void openConnection() {
         try {
             socket1 = new Socket(SERVER_ADDR, SERVER_PORT);
             in1 = new DataInputStream(socket1.getInputStream());
             out1 = new DataOutputStream(socket1.getOutputStream());
+
             new Thread(() -> {
                 try {
                     while (true) {
-                        String strFromServer = in1.readUTF();
-                        if (strFromServer.equalsIgnoreCase("/end")) {
+                        String str = in1.readUTF();
+                        if (str.startsWith("/authok")) {
+                            isValid = false;
+                            break;
+                        } else {
+                            welcome.setText("Неверный логин/пароль");
+                        }
+                    }
+
+                    while (true) {
+                        String str = in1.readUTF();
+                        if (str.startsWith("/new_")) {
+                            String[] tokens = str.split("_");
+                            nickname = tokens[tokens.length-1];
+                            chat(nickname);
+                            for (int i = 1; i < tokens.length; i++){
+                                nickArea.append(tokens[i] + "\n");
+                            }
                             break;
                         }
-                        logArea.append(strFromServer);
+                    }
 
+                    while (true) {
+                        String str = in1.readUTF();
+                        if (str.startsWith("/new_")) {
+                            String[] tokens = str.split("_");
+                            nickArea.setText(null);
+                            for (int i = 1; i < tokens.length; i++){
+                                nickArea.append(tokens[i] + "\n");
+                            }
+                        }else logArea.append(str);
+                        if (str.equalsIgnoreCase("/end")) {
+                            break;
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -202,4 +249,28 @@ public class ChatClient extends JFrame
         }
 
     }
+    public void closeConnection() {
+        try {
+            in1.close();
+            out1.close();
+            socket1.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    public void tryToAuth(){
+        if (socket1 == null || socket1.isClosed()) {
+            openConnection();
+        }
+        try {
+            out1.writeUTF("/auth " + login + " " + password);
+            loginFld.setText(null);
+            passwordFld.setText(null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }

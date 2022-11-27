@@ -11,9 +11,10 @@ import java.util.Vector;
 public class Server {
 
     private Vector<ClientHandler> clients;
-    private ArrayList<String> nicknames;
+    private ArrayList<String> nicknames = new ArrayList<>();
 
     public Server() {
+        AuthService.connect();
         clients = new Vector<>();
         Socket socket0 = null;
         ServerSocket sSocket = null;
@@ -24,8 +25,10 @@ public class Server {
             while (true) {
                 socket0 = sSocket.accept();
                 System.out.println("Client connected");
-                clients.add(new ClientHandler(this, socket0));
+
+                new ClientHandler(this, socket0);
             }
+
 
 
 //            socket0 = sSocket.accept();
@@ -50,6 +53,7 @@ public class Server {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            AuthService.disconnect();
         }
     }
 
@@ -58,5 +62,26 @@ public class Server {
         for (ClientHandler o : clients) {
             o.sendMsg(msg);
         }
+    }
+
+    public void subscribe(ClientHandler clientHandler){
+        clients.add(clientHandler);
+    }
+
+    public void unsubscribe(ClientHandler clientHandler){
+        clients.remove(clientHandler);
+    }
+
+
+    public ArrayList<String> getNicknames() {
+        return nicknames;
+    }
+
+    public void addNicknames(String nicknames) {
+        this.nicknames.add(nicknames);
+    }
+
+    public void remNicknames(String nicknames){
+        this.nicknames.remove(nicknames);
     }
 }
