@@ -11,9 +11,10 @@ import java.util.Vector;
 public class Server {
 
     private Vector<ClientHandler> clients;
-    private ArrayList<String> nicknames;
+    private ArrayList<String> nicknames = new ArrayList<>();
 
     public Server() {
+        AuthService.connect();
         clients = new Vector<>();
         Socket socket0 = null;
         ServerSocket sSocket = null;
@@ -24,22 +25,9 @@ public class Server {
             while (true) {
                 socket0 = sSocket.accept();
                 System.out.println("Client connected");
-                clients.add(new ClientHandler(this, socket0));
+
+                new ClientHandler(this, socket0);
             }
-
-
-//            socket0 = sSocket.accept();
-//            System.out.println("Клиент подключился");
-//            DataInputStream in = new DataInputStream(socket0.getInputStream());
-//            DataOutputStream out = new DataOutputStream(socket0.getOutputStream());
-//
-//            while (true) {
-//                String instr = in.readUTF();
-//                if (instr.equalsIgnoreCase("/end")) {
-//                    break;
-//                }
-//                out.writeUTF(instr);
-//            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -50,6 +38,7 @@ public class Server {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            AuthService.disconnect();
         }
     }
 
@@ -58,5 +47,40 @@ public class Server {
         for (ClientHandler o : clients) {
             o.sendMsg(msg);
         }
+    }
+
+    public void whisper (String msg, String nickname) {
+        for (ClientHandler o : clients) {
+            if (o.getNickname().equals(nickname)) {o.sendMsg(msg);}
+        }
+    }
+
+    public void subscribe(ClientHandler clientHandler){
+        clients.add(clientHandler);
+    }
+
+    public void unsubscribe(ClientHandler clientHandler){
+        clients.remove(clientHandler);
+    }
+
+
+    public boolean isNickBusy(String nick){
+//        for (ClientHandler o : clients) {
+//            if (o.getNickname().equalsIgnoreCase(nick))
+              if (nicknames.contains(nick)) return true;
+//        }
+        return false;
+    }
+
+    public ArrayList<String> getNicknames() {
+        return nicknames;
+    }
+
+    public void addNicknames(String nicknames) {
+        this.nicknames.add(nicknames);
+    }
+
+    public void remNicknames(String nicknames){
+        this.nicknames.remove(nicknames);
     }
 }

@@ -1,4 +1,4 @@
-package lesson6.Client;
+package lesson6.ExcessiveCode;
 
 import javax.swing.*;
 import java.awt.*;
