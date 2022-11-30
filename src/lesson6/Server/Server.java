@@ -29,21 +29,6 @@ public class Server {
                 new ClientHandler(this, socket0);
             }
 
-
-
-//            socket0 = sSocket.accept();
-//            System.out.println("Клиент подключился");
-//            DataInputStream in = new DataInputStream(socket0.getInputStream());
-//            DataOutputStream out = new DataOutputStream(socket0.getOutputStream());
-//
-//            while (true) {
-//                String instr = in.readUTF();
-//                if (instr.equalsIgnoreCase("/end")) {
-//                    break;
-//                }
-//                out.writeUTF(instr);
-//            }
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -64,6 +49,12 @@ public class Server {
         }
     }
 
+    public void whisper (String msg, String nickname) {
+        for (ClientHandler o : clients) {
+            if (o.getNickname().equals(nickname)) {o.sendMsg(msg);}
+        }
+    }
+
     public void subscribe(ClientHandler clientHandler){
         clients.add(clientHandler);
     }
@@ -72,6 +63,14 @@ public class Server {
         clients.remove(clientHandler);
     }
 
+
+    public boolean isNickBusy(String nick){
+//        for (ClientHandler o : clients) {
+//            if (o.getNickname().equalsIgnoreCase(nick))
+              if (nicknames.contains(nick)) return true;
+//        }
+        return false;
+    }
 
     public ArrayList<String> getNicknames() {
         return nicknames;

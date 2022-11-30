@@ -236,6 +236,7 @@ public class ChatClient extends JFrame {
                                 nickArea.append(tokens[i] + "\n");
                             }
                         }else logArea.append(str);
+
                         if (str.equalsIgnoreCase("/end")) {
                             break;
                         }

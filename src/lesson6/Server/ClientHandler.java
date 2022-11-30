@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,7 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
     private String nickname;
+
     public ClientHandler(Server server, Socket socket) {
 
         try {
@@ -25,20 +27,22 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
-                    while (true){
+                    while (true) {
                         String str = in.readUTF();
-                        if (str.startsWith("/auth")){
+                        if (str.startsWith("/auth")) {
                             String tokens[] = str.split(" ");
                             String newNick = AuthService.getNickname(tokens[1], tokens[2]);
-                            if (newNick != null){
-                                String del = "_";
-                                sendMsg("/authok");
-                                nickname = newNick;
-                                server.subscribe(ClientHandler.this);
-                                server.addNicknames(nickname);
-                                String nickes = String.join(del, server.getNicknames());
-                                server.broadcast("/new_" + nickes);
-                                break;
+                            if (newNick != null) {
+                                if (!server.isNickBusy(newNick)) {
+                                    String del = "_";
+                                    sendMsg("/authok");
+                                    nickname = newNick;
+                                    server.subscribe(ClientHandler.this);
+                                    server.addNicknames(nickname);
+                                    String nickes = String.join(del, server.getNicknames());
+                                    server.broadcast("/new_" + nickes);
+                                    break;
+                                } else sendMsg("/wrong nickname");
                             }
                         }
                     }
@@ -51,13 +55,22 @@ public class ClientHandler {
                             out.writeUTF("/serverclosed");
                             break;
                         }
-                        server.broadcast(str);
+                        if (str.contains("/w ")) {
+                            String[] tokens = str.split(" ");
+                            String whom = tokens[3];
+                            StringBuilder message = new StringBuilder(nickname + ": ");
+                            for (int i = 4; i < tokens.length; i++) {
+                                message.append(" ").append(tokens[i]);
+                            }
+                            server.whisper(message.toString(), nickname);
+                            server.whisper(message.toString(), whom);
+                        } else server.broadcast(str);
                     }
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 } finally {
-                    String del = "_";
                     server.remNicknames(nickname);
+                    String del = "_";
                     String nickes = String.join(del, server.getNicknames());
                     server.broadcast("/new_" + nickes);
                     server.broadcast("Пользователь " + nickname + " вышел из чата" + "\n");
@@ -67,7 +80,7 @@ public class ClientHandler {
                         e.printStackTrace();
                     }
                     try {
-                       out.close();
+                        out.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
